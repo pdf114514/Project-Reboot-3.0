@@ -5,6 +5,8 @@
 
 #include "reboot.h"
 
+#include "globals.h"
+
 AWorldSettings* UWorld::K2_GetWorldSettings()
 {
 	static auto fn = FindObject<UFunction>(L"/Script/Engine.World.K2_GetWorldSettings");
@@ -21,7 +23,7 @@ void UWorld::Listen()
 
 	constexpr bool bUseBeacons = true;
 
-	int Port = 7777 - Globals::AmountOfListens + 1;
+	int Port = Globals::Port; // 7777 - Globals::AmountOfListens + 1;
 
 	if (bUseBeacons)
 	{

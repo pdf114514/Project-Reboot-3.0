@@ -15,8 +15,8 @@ std::string ToLower(std::string str) {
     return result;
 }
 
-#define Pattern(x) std::regex P##x(ToLower(#x) + ";" + ".*?");
-#define PatternA(x, y) std::regex P##x(ToLower(#x) + ";" + #y + ".*?");
+#define Pattern(x) std::regex P##x(ToLower(#x) + ";" + ".?");
+#define PatternA(x, y) std::regex P##x(ToLower(#x) + ";" + #y + ".?");
 
 // std::regex PSetPort("setport;(\\d+).*?");
 PatternA(SetPort, (\\d+))
@@ -32,6 +32,8 @@ Pattern(StopSafeZone)
 Pattern(SkipSafeZone)
 Pattern(StartShrinkSafeZone)
 Pattern(SkipShrinkSafeZone)
+
+PatternA(Outfit, (.*?);(.*?))
 
 class CommunicateServer {
     public:
@@ -151,7 +153,7 @@ void CommunicateServer::HandleConnection() {
                 auto gameState = gameMode->GetGameState();
                 static auto warmupCountdownEndTimeOffset = gameState->GetOffset("WarmupCountdownEndTime");
                 float timeSecods = gameState->GetServerWorldTimeSeconds();
-                float duration = 20;
+                float duration = 10;
                 float earlyDuration = duration;
                 static auto warmupCountdownStartTimeOffset = gameState->GetOffset("WarmupCountdownStartTime");
                 static auto warmupCountdownDurationOffset = gameMode->GetOffset("WarmupCountdownDuration");
@@ -179,6 +181,10 @@ void CommunicateServer::HandleConnection() {
                 auto gameMode = Cast<AFortGameModeAthena>(GetWorld()->GetGameMode());
                 auto safeZoneIndicator = gameMode->GetSafeZoneIndicator();
                 if (safeZoneIndicator) safeZoneIndicator->SkipShrinkSafeZone();
+            } else if (std::regex_match(message, matches, POutfit)) {
+                std::string id = matches[1].str();
+                std::string cid = matches[2].str();
+                Globals::OutfitMap[id] = cid;
             } else {
                 MessageBoxA(nullptr, message.c_str(), "Message", MB_OK);
             }
