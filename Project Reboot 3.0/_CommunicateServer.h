@@ -4,11 +4,34 @@
 #include <regex>
 
 #include "globals.h"
+#include "gui.h"
+#include "KismetSystemLibrary.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
-std::regex PSetPort("setport;(\\d+).*?");
-std::regex PStartBus("startbus;.*?");
+std::string ToLower(std::string str) {
+    std::string result = "";
+    std::transform(str.begin(), str.end(), std::back_inserter(result), ::tolower);
+    return result;
+}
+
+#define Pattern(x) std::regex P##x(ToLower(#x) + ";" + ".*?");
+#define PatternA(x, y) std::regex P##x(ToLower(#x) + ";" + #y + ".*?");
+
+// std::regex PSetPort("setport;(\\d+).*?");
+PatternA(SetPort, (\\d+))
+
+Pattern(Restart)
+Pattern(StartBus)
+
+PatternA(InfiniteAmmo, (true|false))
+PatternA(InfiniteMaterials, (true|false))
+
+Pattern(StartSafeZone)
+Pattern(StopSafeZone)
+Pattern(SkipSafeZone)
+Pattern(StartShrinkSafeZone)
+Pattern(SkipShrinkSafeZone)
 
 class CommunicateServer {
     public:
@@ -119,8 +142,43 @@ void CommunicateServer::HandleConnection() {
                 std::string port = matches[1].str();
                 std::cout << "Port: " << port << std::endl;
                 Globals::Port = std::stoi(port);
+            } else if (std::regex_match(message, PRestart)) {
+                Restart();
             } else if (std::regex_match(message, PStartBus)) {
-                
+                if (bStartedBus) continue;
+                bStartedBus = true;
+                auto gameMode = (AFortGameMode*)GetWorld()->GetGameMode();
+                auto gameState = gameMode->GetGameState();
+                static auto warmupCountdownEndTimeOffset = gameState->GetOffset("WarmupCountdownEndTime");
+                float timeSecods = gameState->GetServerWorldTimeSeconds();
+                float duration = 20;
+                float earlyDuration = duration;
+                static auto warmupCountdownStartTimeOffset = gameState->GetOffset("WarmupCountdownStartTime");
+                static auto warmupCountdownDurationOffset = gameMode->GetOffset("WarmupCountdownDuration");
+                static auto warmupEarlyCountdownDurationOffset = gameMode->GetOffset("WarmupEarlyCountdownDuration");
+                gameState->Get<float>(warmupCountdownEndTimeOffset) = timeSecods + duration;
+                gameMode->Get<float>(warmupCountdownDurationOffset) = duration;
+                gameMode->Get<float>(warmupEarlyCountdownDurationOffset) = earlyDuration;
+            } else if (std::regex_match(message, matches, PInfiniteAmmo)) {
+                std::string value = matches[1].str();
+                std::cout << "InfiniteAmmo: " << value << std::endl;
+                Globals::bInfiniteAmmo = value == "true";
+            } else if (std::regex_match(message, matches, PInfiniteMaterials)) {
+                std::string value = matches[1].str();
+                std::cout << "InfiniteMaterials: " << value << std::endl;
+                Globals::bInfiniteMaterials = value == "true";
+            } else if (std::regex_match(message, PStartSafeZone)) {
+                UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), L"startsafezone", nullptr);
+            } else if (std::regex_match(message, PStopSafeZone)) {
+                UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), L"stopsafezone", nullptr);
+            } else if (std::regex_match(message, PSkipSafeZone)) {
+                UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), L"skipsafezone", nullptr);
+            } else if (std::regex_match(message, PStartShrinkSafeZone)) {
+                UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), L"startshrinksafezone", nullptr);
+            } else if (std::regex_match(message, PSkipShrinkSafeZone)) {
+                auto gameMode = Cast<AFortGameModeAthena>(GetWorld()->GetGameMode());
+                auto safeZoneIndicator = gameMode->GetSafeZoneIndicator();
+                if (safeZoneIndicator) safeZoneIndicator->SkipShrinkSafeZone();
             } else {
                 MessageBoxA(nullptr, message.c_str(), "Message", MB_OK);
             }
