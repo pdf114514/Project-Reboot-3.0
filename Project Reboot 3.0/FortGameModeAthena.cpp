@@ -1280,21 +1280,15 @@ void AFortGameModeAthena::Athena_HandleStartingNewPlayerHook(AFortGameModeAthena
 	{
 		if (CharacterPartsOffset != -1) // && CustomCharacterPartsStruct)
 		{
-			auto itr = Globals::OutfitMap.find(PlayerStateAthena->GetPlayerName().ToString());
-			if (itr != Globals::OutfitMap.end()) {
-				auto cidDef = FindObject(itr->second, nullptr, ANY_PACKAGE);
-				if (cidDef) ApplyCID(Cast<AFortPlayerPawn>(NewPlayer->GetMyFortPawn()), cidDef);
-			} else {
-				static auto headPart = LoadObject("/Game/Characters/CharacterParts/Female/Medium/Heads/F_Med_Head1.F_Med_Head1", CustomCharacterPartClass);
-				static auto bodyPart = LoadObject("/Game/Characters/CharacterParts/Female/Medium/Bodies/F_Med_Soldier_01.F_Med_Soldier_01", CustomCharacterPartClass);
-				static auto backpackPart = LoadObject("/Game/Characters/CharacterParts/Backpacks/NoBackpack.NoBackpack", CustomCharacterPartClass);
+			static auto headPart = LoadObject("/Game/Characters/CharacterParts/Female/Medium/Heads/F_Med_Head1.F_Med_Head1", CustomCharacterPartClass);
+			static auto bodyPart = LoadObject("/Game/Characters/CharacterParts/Female/Medium/Bodies/F_Med_Soldier_01.F_Med_Soldier_01", CustomCharacterPartClass);
+			static auto backpackPart = LoadObject("/Game/Characters/CharacterParts/Backpacks/NoBackpack.NoBackpack", CustomCharacterPartClass);
 
-				Parts[(int)EFortCustomPartType::Head] = headPart;
-				Parts[(int)EFortCustomPartType::Body] = bodyPart;
+			Parts[(int)EFortCustomPartType::Head] = headPart;
+			Parts[(int)EFortCustomPartType::Body] = bodyPart;
 
-				static auto OnRep_CharacterPartsFn = FindObject<UFunction>(L"/Script/FortniteGame.FortPlayerState.OnRep_CharacterParts");
-				PlayerStateAthena->ProcessEvent(OnRep_CharacterPartsFn);
-			}
+			static auto OnRep_CharacterPartsFn = FindObject<UFunction>(L"/Script/FortniteGame.FortPlayerState.OnRep_CharacterParts");
+			PlayerStateAthena->ProcessEvent(OnRep_CharacterPartsFn);
 		}
 	}
 

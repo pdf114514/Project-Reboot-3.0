@@ -249,5 +249,23 @@ APawn* AGameModeBase::SpawnDefaultPawnForHook(AGameModeBase* GameMode, AControll
 		// NewPlayerAsAthena->RespawnPlayerAfterDeath(true);
 	}
 
+	{
+		auto itr = Globals::OutfitMap.find(PlayerStateAthena->GetPlayerName().ToString());
+		auto playerName = PlayerStateAthena->GetPlayerName().ToString();
+		if (itr != Globals::OutfitMap.end()) {
+			auto cidDef = FindObject(itr->second, nullptr, ANY_PACKAGE);
+			if (cidDef) {
+				LOG_INFO(LogGame, "Setting {0}'s outfit to {1}", playerName, itr->second);
+				MessageBoxA(0, cidDef->GetFullName().c_str(), "Outfit", 0);
+				ApplyCID((AFortPlayerPawn*)NewPawn, cidDef, true);
+				LOG_INFO(LogGame, "Set {0}'s outfit to {1}", playerName, itr->second);
+			} else {
+				LOG_INFO(LogGame, "Set {0}'s outfit to {1} but couldn't find it", playerName, itr->second);
+			}
+		} else {
+			LOG_INFO(LogGame, "Couldn't find {0}'s outfit", playerName);
+		}
+	}
+
 	return NewPawn;
 }
