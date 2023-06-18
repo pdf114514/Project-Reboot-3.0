@@ -256,7 +256,7 @@ APawn* AGameModeBase::SpawnDefaultPawnForHook(AGameModeBase* GameMode, AControll
 			auto cidDef = FindObject(itr->second, nullptr, ANY_PACKAGE);
 			if (cidDef) {
 				LOG_INFO(LogGame, "Setting {0}'s outfit to {1}", playerName, itr->second);
-				MessageBoxA(0, cidDef->GetFullName().c_str(), "Outfit", 0);
+				// MessageBoxA(0, cidDef->GetFullName().c_str(), "Outfit", 0);
 				ApplyCID((AFortPlayerPawn*)NewPawn, cidDef, true);
 				LOG_INFO(LogGame, "Set {0}'s outfit to {1}", playerName, itr->second);
 			} else {

@@ -6,6 +6,8 @@
         "random": "cpp",
         "ostream": "cpp",
         "regex": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "map": "cpp",
+        "xtree": "cpp"
     }
 }
