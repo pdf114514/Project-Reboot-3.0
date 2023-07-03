@@ -189,11 +189,14 @@
     <ClCompile Include="calendar.h" />
     <ClCompile Include="CheatManager.cpp" />
     <ClCompile Include="Class.cpp" />
+    <ClCompile Include="commands.cpp" />
     <ClCompile Include="Controller.cpp" />
     <ClCompile Include="DataChannel.cpp" />
     <ClCompile Include="DataTableFunctionLibrary.cpp" />
+    <ClCompile Include="extra.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EngineTypes.cpp" />
+    <ClCompile Include="finder.cpp" />
     <ClCompile Include="FortAthenaCreativePortal.cpp" />
     <ClCompile Include="FortAthenaMapInfo.cpp" />
     <ClCompile Include="FortAthenaMutator_Barrier.cpp" />
@@ -252,6 +255,7 @@
     <ClCompile Include="NetDriver.cpp" />
     <ClCompile Include="NetworkObjectList.cpp" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="objectviewer.cpp" />
     <ClCompile Include="PlayerController.cpp" />
     <ClCompile Include="PlayerState.cpp" />
     <ClCompile Include="reboot.cpp" />
@@ -278,6 +282,7 @@
     <ClInclude Include="AthenaBarrierObjective.h" />
     <ClInclude Include="AthenaBigBaseWall.h" />
     <ClInclude Include="AthenaMarkerComponent.h" />
+    <ClInclude Include="AthenaPlayerMatchReport.h" />
     <ClInclude Include="AthenaResurrectionComponent.h" />
     <ClInclude Include="AttributeSet.h" />
     <ClInclude Include="BGA.h" />
@@ -373,6 +378,7 @@
     <ClInclude Include="FortPlayerState.h" />
     <ClInclude Include="FortPlayerStateAthena.h" />
     <ClInclude Include="FortPlaylist.h" />
+    <ClInclude Include="FortPlaylistAthena.h" />
     <ClInclude Include="FortPlaysetItemDefinition.h" />
     <ClInclude Include="FortQuickBars.h" />
     <ClInclude Include="FortResourceItemDefinition.h" />
