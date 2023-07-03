@@ -2,6 +2,7 @@
 
 #include "FortGameModeAthena.h"
 #include "reboot.h"
+#include "KismetSystemLibrary.h"
 
 void AFortSafeZoneIndicator::SkipShrinkSafeZone()
 {
@@ -16,15 +17,6 @@ void AFortSafeZoneIndicator::OnSafeZoneStateChangeHook(AFortSafeZoneIndicator* S
 	auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
 
 	LOG_INFO(LogDev, "OnSafeZoneStateChangeHook!");
-
-	if (NewState == EFortSafeZoneState::Shrinking)
-	{
-		GameState->SetGamePhaseStep(EAthenaGamePhaseStep::StormShrinking);
-	}
-	else if (NewState == EFortSafeZoneState::Holding)
-	{
-		GameState->SetGamePhaseStep(EAthenaGamePhaseStep::StormHolding);
-	}
 
 	return OnSafeZoneStateChangeOriginal(SafeZoneIndicator, NewState, bInitial);
 }

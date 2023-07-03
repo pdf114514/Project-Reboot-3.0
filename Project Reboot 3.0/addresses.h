@@ -74,12 +74,16 @@ namespace Addresses
 	extern inline uint64 GetSquadIdForCurrentPlayer = 0;
 	extern inline uint64 FinishResurrection = 0;
 	extern inline uint64 AddToAlivePlayers = 0;
-	
+	extern inline uint64 GameSessionPatch = 0;
+	extern inline uint64 GetSessionInterface = 0; // Matchmaking
+	extern inline uint64 StartAircraftPhase = 0;
+
 	void SetupVersion(); // Finds Engine Version
 	void FindAll();
 	void Print();
 	void Init();
-
+	
+	std::vector<uint64> GetFunctionsToReturnTrue();
 	std::vector<uint64> GetFunctionsToNull();
 }
 
@@ -96,6 +100,7 @@ namespace Offsets
 	extern inline uint64 NetworkObjectList = 0;
 	extern inline uint64 ClientWorldPackageName = 0;
 	extern inline uint64 Script = 0;
+	extern inline uint64 PropertyClass = 0;
 
 	void FindAll();
 	void Print();

@@ -8,7 +8,7 @@ struct FUniqueNetIdRepl // : public FUniqueNetIdWrapper
 {
 	static UStruct* GetStruct()
 	{
-		static auto Struct = FindObject<UStruct>("/Script/Engine.UniqueNetIdRepl");
+		static auto Struct = FindObject<UStruct>(L"/Script/Engine.UniqueNetIdRepl");
 		return Struct;
 	}
 
@@ -24,27 +24,13 @@ struct FUniqueNetIdRepl // : public FUniqueNetIdWrapper
 		return *(TArray<uint8>*)(__int64(this) + ReplicationBytesOffset);
 	}
 
-	bool IsIdentical(FUniqueNetIdRepl* OtherUniqueId)
+	FORCEINLINE int GetSize() { return GetReplicationBytes().Num(); } // LITERLALY IDK IF THIS IS RIGHT CUZ I CANT FIND IMPL
+	FORCEINLINE uint8* GetBytes() { return GetReplicationBytes().Data; } // ^^^
+
+	FORCENOINLINE bool IsIdentical(FUniqueNetIdRepl* OtherUniqueId)
 	{
-		// idk if this is right but whatever
-
-		bool bTest = true;
-
-		if (this->GetReplicationBytes().Num() > this->GetReplicationBytes().Num()) // != ?
-			bTest = false;
-
-		for (int i = 0; i < this->GetReplicationBytes().Num(); i++)
-		{
-			if (this->GetReplicationBytes().at(i) != OtherUniqueId->GetReplicationBytes().at(i))
-			{
-				bTest = false;
-				break;
-			}
-		}
-
-		// LOG_INFO(LogDev, "btest: {}", bTest);
-
-		return bTest;
+		return (GetSize() == OtherUniqueId->GetSize()) &&
+			(memcmp(GetBytes(), OtherUniqueId->GetBytes(), GetSize()) == 0);
 	}
 
 	void CopyFromAnotherUniqueId(FUniqueNetIdRepl* OtherUniqueId)

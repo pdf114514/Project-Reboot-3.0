@@ -38,7 +38,7 @@ void CollectDataTablesRows(const std::vector<UDataTable*>& DataTables, LOOTING_M
             static auto ParentTablesOffset = CompositeDataTable->GetOffset("ParentTables");
             auto& ParentTables = CompositeDataTable->Get<TArray<UDataTable*>>(ParentTablesOffset);
 
-            for (int i = 0; i < ParentTables.Num(); i++)
+            for (int i = 0; i < ParentTables.Num(); ++i)
             {
                 DataTablesToIterate.push_back(ParentTables.at(i));
             }
@@ -78,7 +78,7 @@ float GetAmountOfLootPackagesToDrop(FFortLootTierData* LootTierData, int Origina
 
     if (LootTierData->GetLootPackageCategoryMinArray().Num() > 0)
     {
-        for (int i = 0; i < LootTierData->GetLootPackageCategoryMinArray().Num(); i++)
+        for (int i = 0; i < LootTierData->GetLootPackageCategoryMinArray().Num(); ++i)
         {
             // Fortnite does more here, we need to figure it out.
             MinimumLootDrops += LootTierData->GetLootPackageCategoryMinArray().at(i);
@@ -95,7 +95,7 @@ float GetAmountOfLootPackagesToDrop(FFortLootTierData* LootTierData, int Origina
 
     if (LootTierData->GetLootPackageCategoryWeightArray().Num() > 0)
     {
-        for (int i = 0; i < LootTierData->GetLootPackageCategoryWeightArray().Num(); i++)
+        for (int i = 0; i < LootTierData->GetLootPackageCategoryWeightArray().Num(); ++i)
         {
             // Fortnite does more here, we need to figure it out.
 
@@ -121,11 +121,11 @@ float GetAmountOfLootPackagesToDrop(FFortLootTierData* LootTierData, int Origina
         {
             // HONESTLY IDEK WHAT FORTNITE DOES HERE
 
-            float v29 = (float)rand() * 0.000030518509;
+            float v29 = (float)rand() * 0.000030518509f;
 
             float v35 = (int)(float)((float)((float)((float)SumLootPackageCategoryWeightArray * v29)
                 + (float)((float)SumLootPackageCategoryWeightArray * v29))
-                + 0.5) >> 1;
+                + 0.5f) >> 1;
 
             // OutLootTierInfo->Hello++;
             MinimumLootDrops++;
@@ -166,7 +166,7 @@ FFortLootTierData* PickLootTierData(const std::vector<UDataTable*>& LTDTables, F
         // buncha code im too lazy to reverse
     }
 
-    // if (fabs(LootTier) <= 0.0000000099999999)
+    // if (fabs(LootTier) <= 0.0000000099999999f)
       //  return 0;
 
     int Multiplier = LootTier == -1 ? 1 : LootTier; // Idk i think we need to fill out the code above for this to work properly maybe
@@ -250,7 +250,7 @@ void PickLootDropsFromLootPackage(const std::vector<UDataTable*>& LPTables, cons
             while (v9 < PickedPackage->GetCount())
             {
                 int LootPackageCategoryToUseForLPCall = 0; // hmm
-                
+
                 PickLootDropsFromLootPackage(LPTables,
                     PickedPackage->GetLootPackageCall().Data.Data ? UKismetStringLibrary::Conv_StringToName(PickedPackage->GetLootPackageCall()) : FName(0),
                     OutEntries, LootPackageCategoryToUseForLPCall, WorldLevel, bPrint
@@ -270,7 +270,7 @@ void PickLootDropsFromLootPackage(const std::vector<UDataTable*>& LPTables, cons
         LOG_INFO(LogLoot, "Loot Package {} does not contain a LootPackageCall or ItemDefinition.", PickedPackage->GetLootPackageID().ToString());
         return;
     }
-    
+
     auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(ItemDefinition);
     int LoadedAmmo = WeaponItemDefinition ? WeaponItemDefinition->GetClipSize() : 0; // we shouldnt set loaded ammo here techinally
 
@@ -332,14 +332,14 @@ void PickLootDropsFromLootPackage(const std::vector<UDataTable*>& LPTables, cons
             if (Engine_Version >= 424)
             {
                 /*
-                
+
                 Alright, so Fortnite literally doesn't reference the first loot package category for chests and floor loot (didnt check rest).
                 Usually the first loot package category in our case is ammo, so this is quite weird.
                 I have no clue how Fortnite would actually add the ammo.
 
                 Guess what, on the chapter 2 new loot tier groups, like FactionChests, they don't even have a package which has ammo as its loot package call.
-                
-                */ 
+
+                */
 
                 bool IsWeapon = PickedPackage->GetLootPackageID().ToString().contains(".Weapon.") && WeaponItemDefinition; // ONG?
 
@@ -365,6 +365,8 @@ void PickLootDropsFromLootPackage(const std::vector<UDataTable*>& LPTables, cons
         }
     }
 }
+
+// #define brudda
 
 std::vector<LootDrop> PickLootDrops(FName TierGroupName, int WorldLevel, int ForcedLootTier, bool bPrint, int recursive, bool bCombineDrops)
 {
@@ -454,7 +456,7 @@ std::vector<LootDrop> PickLootDrops(FName TierGroupName, int WorldLevel, int For
 
         if (FortGameFeatureDataClass)
         {
-            for (int i = 0; i < ChunkedObjects->Num(); i++)
+            for (int i = 0; i < ChunkedObjects->Num(); ++i)
             {
                 auto Object = ChunkedObjects->GetObjectByIndex(i);
 
@@ -492,7 +494,7 @@ std::vector<LootDrop> PickLootDrops(FName TierGroupName, int WorldLevel, int For
                             static auto GameplayTagContainerOffset = CurrentPlaylist->GetOffset("GameplayTagContainer");
                             auto GameplayTagContainer = CurrentPlaylist->GetPtr<FGameplayTagContainer>(GameplayTagContainerOffset);
 
-                            for (int i = 0; i < GameplayTagContainer->GameplayTags.Num(); i++)
+                            for (int i = 0; i < GameplayTagContainer->GameplayTags.Num(); ++i)
                             {
                                 auto& Tag = GameplayTagContainer->GameplayTags.At(i);
 
@@ -546,7 +548,7 @@ std::vector<LootDrop> PickLootDrops(FName TierGroupName, int WorldLevel, int For
                             static auto GameplayTagContainerOffset = CurrentPlaylist->GetOffset("GameplayTagContainer");
                             auto GameplayTagContainer = CurrentPlaylist->GetPtr<FGameplayTagContainer>(GameplayTagContainerOffset);
 
-                            for (int i = 0; i < GameplayTagContainer->GameplayTags.Num(); i++)
+                            for (int i = 0; i < GameplayTagContainer->GameplayTags.Num(); ++i)
                             {
                                 auto& Tag = GameplayTagContainer->GameplayTags.At(i);
 
@@ -591,7 +593,7 @@ std::vector<LootDrop> PickLootDrops(FName TierGroupName, int WorldLevel, int For
             }
         }
 
-        for (int i = 0; i < LTDTables.size(); i++)
+        for (int i = 0; i < LTDTables.size(); ++i)
         {
             auto& Table = LTDTables.at(i);
 
@@ -604,7 +606,7 @@ std::vector<LootDrop> PickLootDrops(FName TierGroupName, int WorldLevel, int For
             LOG_INFO(LogDev, "[{}] LTD {}", i, Table->GetFullName());
         }
 
-        for (int i = 0; i < LPTables.size(); i++)
+        for (int i = 0; i < LPTables.size(); ++i)
         {
             auto& Table = LPTables.at(i);
 
@@ -615,7 +617,7 @@ std::vector<LootDrop> PickLootDrops(FName TierGroupName, int WorldLevel, int For
 
             Table->AddToRoot();
             LOG_INFO(LogDev, "[{}] LP {}", i, Table->GetFullName());
-        } 
+        }
     }
 
     if (!Addresses::LoadAsset)
@@ -666,13 +668,13 @@ std::vector<LootDrop> PickLootDrops(FName TierGroupName, int WorldLevel, int For
         }
 
     }
-    
+
     if (LTDTables.size() <= 0 || LPTables.size() <= 0)
     {
         LOG_WARN(LogLoot, "Empty tables! ({} {})", LTDTables.size(), LPTables.size());
         return LootDrops;
     }
-    
+
     FName LootTierRowName;
     auto ChosenRowLootTierData = PickLootTierData(LTDTables, TierGroupName, ForcedLootTier, &LootTierRowName);
 
@@ -702,11 +704,11 @@ std::vector<LootDrop> PickLootDrops(FName TierGroupName, int WorldLevel, int For
         }
         else
         {
-            NumberLootDrops = (int)(float)((float)(NumLootPackageDrops + NumLootPackageDrops) - 0.5) >> 1;
+            NumberLootDrops = (int)(float)((float)(NumLootPackageDrops + NumLootPackageDrops) - 0.5f) >> 1;
             float v20 = NumLootPackageDrops - NumberLootDrops;
-            if (v20 > 0.0000099999997)
+            if (v20 > 0.0000099999997f)
             {
-                NumberLootDrops += v20 >= (rand() * 0.000030518509);
+                NumberLootDrops += v20 >= (rand() * 0.000030518509f);
             }
         }
     }
@@ -717,12 +719,12 @@ std::vector<LootDrop> PickLootDrops(FName TierGroupName, int WorldLevel, int For
 
     if (AmountOfLootPackageDrops > 0)
     {
-        for (int i = 0; i < AmountOfLootPackageDrops; i++)
+        for (int i = 0; i < AmountOfLootPackageDrops; ++i)
         {
             if (i >= ChosenRowLootTierData->GetLootPackageCategoryMinArray().Num())
                 break;
 
-            for (int j = 0; j < ChosenRowLootTierData->GetLootPackageCategoryMinArray().at(i); j++)
+            for (int j = 0; j < ChosenRowLootTierData->GetLootPackageCategoryMinArray().at(i); ++j)
             {
                 if (ChosenRowLootTierData->GetLootPackageCategoryMinArray().at(i) < 1)
                     break;

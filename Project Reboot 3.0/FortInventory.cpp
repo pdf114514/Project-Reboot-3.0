@@ -249,7 +249,7 @@ std::pair<std::vector<UFortItem*>, std::vector<UFortItem*>> AFortInventory::AddI
 	return Ret;
 }
 
-bool AFortInventory::RemoveItem(const FGuid& ItemGuid, bool* bShouldUpdate, int Count, bool bForceRemoval)
+bool AFortInventory::RemoveItem(const FGuid& ItemGuid, bool* bShouldUpdate, int Count, bool bForceRemoval, bool bIgnoreVariables)
 {
 	if (bShouldUpdate)
 		*bShouldUpdate = false;
@@ -280,7 +280,7 @@ bool AFortInventory::RemoveItem(const FGuid& ItemGuid, bool* bShouldUpdate, int 
 
 	bool bOverrideChangeStackSize = false;
 
-	if (ItemDefinition->ShouldPersistWhenFinalStackEmpty())
+	if (!bIgnoreVariables && ItemDefinition->ShouldPersistWhenFinalStackEmpty())
 	{
 		bool bIsFinalStack = true;
 
@@ -471,16 +471,20 @@ void AFortInventory::ModifyCount(UFortItem* ItemInstance, int New, bool bRemove,
 
 UFortItem* AFortInventory::GetPickaxeInstance()
 {
-	static auto FortWeaponMeleeItemDefinitionClass = FindObject<UClass>("/Script/FortniteGame.FortWeaponMeleeItemDefinition");
+	static auto FortWeaponMeleeItemDefinitionClass = FindObject<UClass>(L"/Script/FortniteGame.FortWeaponMeleeItemDefinition");
 
 	auto& ItemInstances = GetItemList().GetItemInstances();
 
-	for (int i = 0; i < ItemInstances.Num(); i++)
+	for (int i = 0; i < ItemInstances.Num(); ++i)
 	{
 		auto ItemInstance = ItemInstances.At(i);
 
-		if (ItemInstance->GetItemEntry()->GetItemDefinition()->IsA(FortWeaponMeleeItemDefinitionClass))
+		if (ItemInstance->GetItemEntry() && ItemInstance->GetItemEntry()->GetItemDefinition() &&
+			ItemInstance->GetItemEntry()->GetItemDefinition()->IsA(FortWeaponMeleeItemDefinitionClass)
+			)
+		{
 			return ItemInstance;
+		}
 	}
 	
 	return nullptr;

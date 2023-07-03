@@ -17,7 +17,7 @@ void LoopSpecs(UAbilitySystemComponent* AbilitySystemComponent, std::function<vo
 
 	if (ActivatableAbilities && Items)
 	{
-		for (int i = 0; i < Items->Num(); i++)
+		for (int i = 0; i < Items->Num(); ++i)
 		{
 			auto CurrentSpec = Items->AtPtr(i, SpecSize); // (FGameplayAbilitySpec*)(__int64(Items->Data) + (static_cast<long long>(SpecSize) * i));
 			func(CurrentSpec);
@@ -112,7 +112,7 @@ bool UAbilitySystemComponent::HasAbility(UObject* DefaultAbility)
 
 	auto& Items = ActivatableAbilities->GetItems();
 
-	for (int i = 0; i < Items.Num(); i++)
+	for (int i = 0; i < Items.Num(); ++i)
 	{
 		auto Spec = Items.AtPtr(i, FGameplayAbilitySpec::GetStructSize());
 
@@ -197,6 +197,12 @@ void UAbilitySystemComponent::InternalServerTryActivateAbilityHook(UAbilitySyste
 
 FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbilityEasy(UClass* AbilityClass, UObject* SourceObject, bool bDoNotRegive)
 {
+	if (!AbilityClass)
+	{
+		LOG_WARN(LogAbilities, "Invalid AbilityClass passed into GiveAbilityEasy!");
+		return FGameplayAbilitySpecHandle();
+	}
+
 	// LOG_INFO(LogDev, "Making spec!");
 
 	auto DefaultAbility = AbilityClass->CreateDefaultObject();

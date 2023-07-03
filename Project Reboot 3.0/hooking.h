@@ -6,6 +6,8 @@
 #include "memcury.h"
 #include "Class.h"
 
+#include "reboot.h"
+
 struct FunctionHooks
 {
     void* Original;
@@ -18,6 +20,17 @@ struct FunctionHooks
 
 static inline std::vector<FunctionHooks> AllFunctionHooks;
 
+inline void PatchByte(uint64 addr, uint8_t byte)
+{
+    DWORD dwProtection;
+    VirtualProtect((PVOID)addr, 1, PAGE_EXECUTE_READWRITE, &dwProtection);
+
+    *(uint8_t*)addr = byte;
+
+    DWORD dwTemp;
+    VirtualProtect((PVOID)addr, 1, dwProtection, &dwTemp);
+}
+
 inline void PatchBytes(uint64 addr, const std::vector<uint8_t>& Bytes)
 {
     if (!addr)
@@ -25,7 +38,7 @@ inline void PatchBytes(uint64 addr, const std::vector<uint8_t>& Bytes)
 
     for (int i = 0; i < Bytes.size(); i++)
     {
-        *(uint8_t*)(addr + i) = Bytes.at(i);
+        PatchByte(addr + i, Bytes.at(i));
     }
 }
 
@@ -180,7 +193,7 @@ inline __int64 GetFunctionIdxOrPtr(UFunction* Function, bool bBreakWhenHitRet = 
             }
         }
 
-        if ((*(uint8_t*)(NativeAddr + i) == 0x48 && *(uint8_t*)(NativeAddr + i + 1) == 0xFF) && *(uint8_t*)(NativeAddr + i + 2) == 0xA0) // jmp qword ptr
+        if (*(uint8_t*)(NativeAddr + i) == 0x48 && *(uint8_t*)(NativeAddr + i + 1) == 0xFF && *(uint8_t*)(NativeAddr + i + 2) == 0xA0) // jmp qword ptr
         {
             if (bFoundValidate)
             {
@@ -282,7 +295,7 @@ namespace Hooking
             // *(int32_t*)(instrAddr + 1) = static_cast<int32_t>(delta);
         }
 
-        static bool Hook(UObject* DefaultClass, UFunction* Function, void* Detour, void** Original = nullptr, bool bUseSecondMethod = true, bool bHookExec = false, bool bOverride = true) // Native hook
+        static bool Hook(UObject* DefaultClass, UFunction* Function, void* Detour, void** Original = nullptr, bool bUseSecondMethod = true, bool bHookExec = false, bool bOverride = true, bool bBreakWhenRet = false) // Native hook
 		{
             if (!bOverride)
                 return false;
@@ -311,7 +324,7 @@ namespace Hooking
                 return true;
             }
 
-            auto AddrOrIdx = bUseSecondMethod ? GetFunctionIdxOrPtr2(Function) : GetFunctionIdxOrPtr(Function);
+            auto AddrOrIdx = bUseSecondMethod ? GetFunctionIdxOrPtr2(Function) : GetFunctionIdxOrPtr(Function, bBreakWhenRet);
 
             if (AddrOrIdx == -1)
             {
@@ -354,7 +367,14 @@ namespace Hooking
 static inline void ChangeBytesThing(uint8_t* instrAddr, uint8_t* DetourAddr, int Offset)
 {
     int64_t delta = DetourAddr - (instrAddr + Offset + 4);
-    *(int32_t*)(instrAddr + Offset) = static_cast<int32_t>(delta);
+    auto addr = (int32_t*)(instrAddr + Offset);
+    DWORD dwProtection;
+    VirtualProtect((PVOID)addr, 4, PAGE_EXECUTE_READWRITE, &dwProtection);
+
+    *addr = static_cast<int32_t>(delta);
+
+    DWORD dwTemp;
+    VirtualProtect((PVOID)addr, 1, dwProtection, &dwTemp);
 }
 
 enum ERelativeOffsets

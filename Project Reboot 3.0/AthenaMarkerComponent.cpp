@@ -35,6 +35,7 @@ void UAthenaMarkerComponent::ServerAddMapMarkerHook(UAthenaMarkerComponent* Mark
 	MarkerData->GetMarkerType() = MarkerRequestPtr->GetMarkerType();
 	MarkerData->GetOwner() = PlayerState;
 	MarkerData->GetWorldNormal() = MarkerRequestPtr->GetWorldNormal();
+
 	if (WorldPositionOffset != -1)
 		MarkerData->GetWorldPosition() = MarkerRequestPtr->GetWorldPosition();
 	if (WorldPositionOffset != -1)
@@ -54,30 +55,6 @@ void UAthenaMarkerComponent::ServerAddMapMarkerHook(UAthenaMarkerComponent* Mark
 	((TSoftObjectPtr<UObject>*)(__int64(MarkerData->GetCustomDisplayInfo()) + IconOffset))->SoftObjectPtr.WeakPtr.ObjectSerialNumber = 0;
 	*(FText*)(__int64(MarkerData->GetCustomDisplayInfo()) + DisplayNameOffset) = UKismetTextLibrary::Conv_StringToText(L"");
 
-	/* if (MarkerRequest.MarkedActor)
-	{
-		MarkerData.MarkedActor.WeakPtr.ObjectIndex = MarkerRequest.MarkedActor->InternalIndex;
-		MarkerData.MarkedActor.WeakPtr.ObjectSerialNumber = 0;
-
-		MarkerData.MarkedActorClass.WeakPtr.ObjectIndex = MarkerRequest.MarkedActor->Class->InternalIndex;
-		MarkerData.MarkedActorClass.WeakPtr.ObjectSerialNumber = 0;
-
-		char (*WtfSkidda)(UAthenaMarkerComponent * a1, AActor * a2, FFortWorldMarkerData & MarkerData) = decltype(WtfSkidda)(__int64(GetModuleHandleW(0)) + 0x1297E00);
-		(int)WtfSkidda(PlayerController->MarkerComponent, MarkerRequest.MarkedActor, MarkerData);
-		// std::cout << "WtfSkidda: " << (int)WtfSkidda(PlayerController->MarkerComponent, MarkerRequest.MarkedActor, MarkerData) << '\n';
-	}
-
-	if (MarkerData.MarkerType == EFortWorldMarkerType::Item)
-	{
-		if (auto Pickup = Cast<AFortPickup>(MarkerRequest.MarkedActor))
-		{
-			MarkerData.ItemDefinition = Pickup->PrimaryPickupItemEntry.ItemDefinition;
-			MarkerData.ItemCount = Pickup->PrimaryPickupItemEntry.Count;
-		}
-	} */
-
-	// static void (*Idk)(UAthenaMarkerComponent* MarkerComponent, FFortWorldMarkerData MarkerData) = decltype(Idk)(__int64(GetModuleHandleW(0)) + 0x12A8990);
-
 	static auto PlayerTeamOffset = PlayerState->GetOffset("PlayerTeam");
 	auto PlayerTeam = PlayerState->Get<UObject*>(PlayerTeamOffset);
 
@@ -87,7 +64,7 @@ void UAthenaMarkerComponent::ServerAddMapMarkerHook(UAthenaMarkerComponent* Mark
 	static auto TeamMembersOffset = PlayerTeam->GetOffset("TeamMembers");
 	auto& TeamMembers = PlayerTeam->Get<TArray<AController*>>(TeamMembersOffset);
 
-	for (int i = 0; i < TeamMembers.Num(); i++)
+	for (int i = 0; i < TeamMembers.Num(); ++i)
 	{
 		if (TeamMembers.at(i) == PlayerController)
 			continue;
@@ -124,8 +101,8 @@ void UAthenaMarkerComponent::ServerAddMapMarkerHook(UAthenaMarkerComponent* Mark
 				((FFastArraySerializerItem*)MarkerData)->ReplicationID = -1;
 				((FFastArraySerializerItem*)MarkerData)->ReplicationKey = -1;
 
-				auto& Markers = *(TArray<FFortWorldMarkerData>*)(__int64(MarkerStream) + MarkersOffset);
-				Markers.AddPtr(MarkerData, FFortWorldMarkerData::GetStructSize());
+				auto Markers = (TArray<FFortWorldMarkerData>*)(__int64(MarkerStream) + MarkersOffset);
+				Markers->AddPtr(MarkerData, FFortWorldMarkerData::GetStructSize());
 				MarkerStream->MarkArrayDirty();
 			}
 		}
@@ -155,7 +132,7 @@ void UAthenaMarkerComponent::ServerRemoveMapMarkerHook(UAthenaMarkerComponent* M
 	static auto TeamMembersOffset = PlayerTeam->GetOffset("TeamMembers");
 	auto& TeamMembers = PlayerTeam->Get<TArray<AController*>>(TeamMembersOffset);
 
-	for (int i = 0; i < TeamMembers.Num(); i++)
+	for (int i = 0; i < TeamMembers.Num(); ++i)
 	{
 		if (TeamMembers.at(i) == PlayerController)
 			continue;

@@ -7,6 +7,7 @@
 #include "FortKismetLibrary.h"
 #include "AthenaMarkerComponent.h"
 #include "FortVolume.h"
+#include "AthenaPlayerMatchReport.h"
 
 static void ApplyHID(AFortPlayerPawn* Pawn, UObject* HeroDefinition, bool bUseServerChoosePart = false)
 {
@@ -140,6 +141,15 @@ public:
 	static inline void (*StartGhostModeOriginal)(UObject* Context, FFrame* Stack, void* Ret);
 	static inline void (*EndGhostModeOriginal)(AFortPlayerControllerAthena* PlayerController);
 
+	void SpectateOnDeath() // actually in zone
+	{
+		static auto SpectateOnDeathFn = FindObject<UFunction>(L"/Script/FortniteGame.FortPlayerControllerZone.SpectateOnDeath") ?
+			FindObject<UFunction>(L"/Script/FortniteGame.FortPlayerControllerZone.SpectateOnDeath") :
+			FindObject<UFunction>(L"/Script/FortniteGame.FortPlayerControllerAthena.SpectateOnDeath");
+
+		this->ProcessEvent(SpectateOnDeathFn);
+	}
+
 	class UAthenaResurrectionComponent*& GetResurrectionComponent()
 	{
 		static auto ResurrectionComponentOffset = GetOffset("ResurrectionComponent");
@@ -189,6 +199,25 @@ public:
 
 		if (ClientClearDeathNotificationFn)
 			this->ProcessEvent(ClientClearDeathNotificationFn);
+	}
+
+	UAthenaPlayerMatchReport*& GetMatchReport()
+	{
+		static auto MatchReportOffset = GetOffset("MatchReport");
+		return Get<UAthenaPlayerMatchReport*>(MatchReportOffset);
+	}
+
+	void ClientSendTeamStatsForPlayer(FAthenaMatchTeamStats* TeamStats)
+	{
+		static auto ClientSendTeamStatsForPlayerFn = FindObject<UFunction>("/Script/FortniteGame.FortPlayerControllerAthena.ClientSendTeamStatsForPlayer");
+		static auto ParamSize = ClientSendTeamStatsForPlayerFn->GetPropertiesSize();
+		auto Params = malloc(ParamSize);
+
+		memcpy_s(Params, ParamSize, TeamStats, TeamStats->GetStructSize());
+
+		this->ProcessEvent(ClientSendTeamStatsForPlayerFn, Params);
+
+		free(Params);
 	}
 
 	void RespawnPlayerAfterDeath(bool bEnterSkydiving)

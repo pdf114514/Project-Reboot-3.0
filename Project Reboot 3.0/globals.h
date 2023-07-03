@@ -1,7 +1,6 @@
 #pragma once
 
 #include <atomic>
-#include <map>
 
 #include "inc.h"
 
@@ -24,8 +23,6 @@ namespace Globals
 	extern inline bool bAutoRestart = false; // doesnt work fyi
 	extern inline bool bFillVendingMachines = true;
 	extern inline int AmountOfListens = 0; // TODO: Switch to this for LastNum
-	extern inline int Port = 20000;
-	extern inline std::map<std::string, std::string> OutfitMap = {};
 }
 
 extern inline int NumToSubtractFromSquadId = 0; // I think 2?

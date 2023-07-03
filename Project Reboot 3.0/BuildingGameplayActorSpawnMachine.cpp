@@ -27,7 +27,10 @@ void ABuildingGameplayActorSpawnMachine::RebootingDelegateHook(ABuildingGameplay
 	LOG_INFO(LogDev, "RebootingDelegateHook!");
 
 	if (!SpawnMachine->GetResurrectLocation())
+	{
+		LOG_WARN(LogRebooting, "Reboot van did not have a resurrection location!");
 		return;
+	}
 
 	LOG_INFO(LogDev, "PlayerIdsForResurrection.Num(): {}", SpawnMachine->GetPlayerIdsForResurrection().Num());
 
@@ -42,7 +45,7 @@ void ABuildingGameplayActorSpawnMachine::RebootingDelegateHook(ABuildingGameplay
 	{
 		auto& SquadArray = TeamArrayContainer->SquadsArray.at(SpawnMachine->GetSquadId());
 
-		for (int i = 0; i < SquadArray.Num(); i++)
+		for (int i = 0; i < SquadArray.Num(); ++i)
 		{
 			auto StrongPlayerState = SquadArray.at(i).Get();
 
@@ -60,8 +63,6 @@ void ABuildingGameplayActorSpawnMachine::RebootingDelegateHook(ABuildingGameplay
 			break;
 		}
 	}
-
-	LOG_INFO(LogDev, "PlayerController: {}", __int64(PlayerController));
 
 	if (!PlayerController)
 		return;
@@ -91,27 +92,24 @@ void ABuildingGameplayActorSpawnMachine::RebootingDelegateHook(ABuildingGameplay
 	if (!StrongResurrectionLocation)
 		return;
 
-	// GameMode->RestartPlayerAtPlayerStart(PlayerController, StrongResurrectionLocation);
-
 	PlayerState->GetRespawnData()->IsRespawnDataAvailable() = false;
 	PlayerController->SetPlayerIsWaiting(true);
-	PlayerController->ServerRestartPlayer();
+	// PlayerController->ServerRestartPlayer();
 
-	/* static auto PawnClass = FindObject<UClass>("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C");
-	auto NewPawn = GetWorld()->SpawnActor<AFortPlayerPawnAthena>(PawnClass, StrongResurrectionLocation->GetTransform());
-	PlayerController->Possess(NewPawn); */
+	bool bEnterSkydiving = false; // TODO get from like curve table iirc idk or the variable
+	PlayerController->RespawnPlayerAfterDeath(bEnterSkydiving);
 
 	AFortPlayerPawn* NewPawn = Cast<AFortPlayerPawn>(PlayerController->GetMyFortPawn());
 
 	LOG_INFO(LogDev, "NewPawn: {}", __int64(NewPawn));
 
 	if (!NewPawn) // Failed to restart player
+	{
+		LOG_INFO(LogRebooting, "Failed to restart the player!");
 		return;
-
-	bool bEnterSkydiving = false; // TODO get from like curve table iirc idk or the variable
+	}
 
 	PlayerController->ClientClearDeathNotification();
-	// PlayerController->RespawnPlayerAfterDeath(bEnterSkydiving);
 
 	NewPawn->SetHealth(100);
 	NewPawn->SetMaxHealth(100);
@@ -122,15 +120,15 @@ void ABuildingGameplayActorSpawnMachine::RebootingDelegateHook(ABuildingGameplay
 	static auto OnRep_RebootCounterFn = FindObject<UFunction>(L"/Script/FortniteGame.FortPlayerStateAthena.OnRep_RebootCounter");
 	PlayerState->ProcessEvent(OnRep_RebootCounterFn);
 
+	auto OnPlayerPawnResurrectedFn = SpawnMachine->FindFunction("OnPlayerPawnResurrected");
+	SpawnMachine->ProcessEvent(OnPlayerPawnResurrectedFn, &NewPawn);
+
 	static void (*AddToAlivePlayersOriginal)(AFortGameModeAthena* GameMode, AFortPlayerControllerAthena* Player) = decltype(AddToAlivePlayersOriginal)(Addresses::AddToAlivePlayers);
 
 	if (AddToAlivePlayersOriginal)
 	{
 		AddToAlivePlayersOriginal(GameMode, PlayerController);
 	}
-
-	auto OnPlayerPawnResurrectedFn = SpawnMachine->FindFunction("OnPlayerPawnResurrected");
-	SpawnMachine->ProcessEvent(OnPlayerPawnResurrectedFn, &NewPawn);
 
 	bool IsFinalPlayerToBeRebooted = true;
 

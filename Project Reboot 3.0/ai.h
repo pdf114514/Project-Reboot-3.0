@@ -146,6 +146,9 @@ static void SetupAIGoalManager()
 
     static auto AIGoalManagerClass = FindObject<UClass>(L"/Script.FortniteGame.FortAIGoalManager");
 
+    if (!AIGoalManagerClass)
+        return;
+
     LOG_INFO(LogDev, "AIGoalManager Before: {}", __int64(GameMode->Get(AIGoalManagerOffset)));
 
     if (!GameMode->Get(AIGoalManagerOffset))
@@ -295,7 +298,7 @@ static AFortPlayerPawn* SpawnAIFromCustomizationData(const FVector& Location, UF
     {
         auto& StartupInventoryItems = StartupInventory->Get<TArray<UFortItemDefinition*>>(StartupInventoryItemsOffset);
 
-        for (int i = 0; i < StartupInventoryItems.Num(); i++)
+        for (int i = 0; i < StartupInventoryItems.Num(); ++i)
         {
             ItemsToGrant.push_back({ StartupInventoryItems.at(i), 1 });
         }
@@ -304,7 +307,7 @@ static AFortPlayerPawn* SpawnAIFromCustomizationData(const FVector& Location, UF
     {
         auto& StartupInventoryItems = StartupInventory->Get<TArray<FItemAndCount>>(StartupInventoryItemsOffset);
 
-        for (int i = 0; i < StartupInventoryItems.Num(); i++)
+        for (int i = 0; i < StartupInventoryItems.Num(); ++i)
         {
             ItemsToGrant.push_back({ StartupInventoryItems.at(i).Item, StartupInventoryItems.at(i).Count });
         }
@@ -315,7 +318,7 @@ static AFortPlayerPawn* SpawnAIFromCustomizationData(const FVector& Location, UF
 
     if (Inventory)
     {
-        for (int i = 0; i < ItemsToGrant.size(); i++)
+        for (int i = 0; i < ItemsToGrant.size(); ++i)
         {
             auto pair = Inventory->AddItem(ItemsToGrant.at(i).first, nullptr, ItemsToGrant.at(i).second);
 

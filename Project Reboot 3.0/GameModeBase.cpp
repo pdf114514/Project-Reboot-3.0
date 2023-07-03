@@ -11,7 +11,7 @@
 
 void AGameModeBase::RestartPlayerAtTransform(AController* NewPlayer, FTransform SpawnTransform)
 {
-	static auto RestartPlayerAtTransformFn = FindObject<UFunction>("/Script/Engine.GameModeBase.RestartPlayerAtTransform");
+	static auto RestartPlayerAtTransformFn = FindObject<UFunction>(L"/Script/Engine.GameModeBase.RestartPlayerAtTransform");
 
 	struct
 	{
@@ -24,7 +24,7 @@ void AGameModeBase::RestartPlayerAtTransform(AController* NewPlayer, FTransform 
 
 void AGameModeBase::RestartPlayerAtPlayerStart(AController* NewPlayer, AActor* StartSpot)
 {
-	static auto RestartPlayerAtPlayerStartFn = FindObject<UFunction>("/Script/Engine.GameModeBase.RestartPlayerAtPlayerStart");
+	static auto RestartPlayerAtPlayerStartFn = FindObject<UFunction>(L"/Script/Engine.GameModeBase.RestartPlayerAtPlayerStart");
 
 	struct
 	{
@@ -37,13 +37,13 @@ void AGameModeBase::RestartPlayerAtPlayerStart(AController* NewPlayer, AActor* S
 
 void AGameModeBase::RestartPlayer(AController* NewPlayer)
 {
-	static auto RestartPlayerFn = FindObject<UFunction>("/Script/Engine.GameModeBase.RestartPlayer");
+	static auto RestartPlayerFn = FindObject<UFunction>(L"/Script/Engine.GameModeBase.RestartPlayer");
 	this->ProcessEvent(RestartPlayerFn, &NewPlayer);
 }
 
 UClass* AGameModeBase::GetDefaultPawnClassForController(AController* InController)
 {
-	static auto GetDefaultPawnClassForControllerFn = FindObject<UFunction>("/Script/Engine.GameModeBase.GetDefaultPawnClassForController");
+	static auto GetDefaultPawnClassForControllerFn = FindObject<UFunction>(L"/Script/Engine.GameModeBase.GetDefaultPawnClassForController");
 	struct
 	{
 		AController* InController;                                             // (Parm, ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash, NativeAccessSpecifierPublic)
@@ -57,7 +57,7 @@ UClass* AGameModeBase::GetDefaultPawnClassForController(AController* InControlle
 
 void AGameModeBase::ChangeName(AController* Controller, const FString& NewName, bool bNameChange)
 {
-	static auto ChangeNameFn = FindObject<UFunction>("/Script/Engine.GameModeBase.ChangeName");
+	static auto ChangeNameFn = FindObject<UFunction>(L"/Script/Engine.GameModeBase.ChangeName");
 
 	struct
 	{
@@ -71,7 +71,7 @@ void AGameModeBase::ChangeName(AController* Controller, const FString& NewName, 
 
 AActor* AGameModeBase::K2_FindPlayerStart(AController* Player, FString IncomingName)
 {
-	static auto K2_FindPlayerStartFn = FindObject<UFunction>("/Script/Engine.GameModeBase.K2_FindPlayerStart");
+	static auto K2_FindPlayerStartFn = FindObject<UFunction>(L"/Script/Engine.GameModeBase.K2_FindPlayerStart");
 
 	struct
 	{
@@ -99,18 +99,18 @@ APawn* AGameModeBase::SpawnDefaultPawnForHook(AGameModeBase* GameMode, AControll
 	if (!PlayerStateAthena)
 		return nullptr; // return original?
 
-	static auto PawnClass = FindObject<UClass>("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C");
+	static auto PawnClass = FindObject<UClass>(L"/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C");
 	static auto DefaultPawnClassOffset = GameMode->GetOffset("DefaultPawnClass");
 	GameMode->Get<UClass*>(DefaultPawnClassOffset) = PawnClass;
 
-	constexpr bool bUseSpawnActor = false;
+	bool bUseSpawnActor = Fortnite_Version >= 20;
 
 	static auto SpawnDefaultPawnAtTransformFn = FindObject<UFunction>(L"/Script/Engine.GameModeBase.SpawnDefaultPawnAtTransform");
 
 	FTransform SpawnTransform = StartSpot->GetTransform();
 	APawn* NewPawn = nullptr;
 
-	if constexpr (bUseSpawnActor)
+	if (bUseSpawnActor)
 	{
 		NewPawn = GetWorld()->SpawnActor<APawn>(PawnClass, SpawnTransform, CreateSpawnParameters(ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn));
 	}
@@ -127,25 +127,7 @@ APawn* AGameModeBase::SpawnDefaultPawnForHook(AGameModeBase* GameMode, AControll
 	if (!NewPawn)
 		return nullptr;
 
-	bool bIsRespawning = false;
-
-	/*
-	static auto RespawnDataOffset = PlayerStateAthena->GetOffset("RespawnData", false);
-
-	if (RespawnDataOffset != -1)
-	{
-		auto RespawnDataPtr = PlayerStateAthena->GetRespawnData();
-
-		if (RespawnDataPtr->IsServerReady() && RespawnDataPtr->IsClientReady()) // && GameState->IsRespawningAllowed(PlayerState);
-		{
-			bIsRespawning = true;
-		}
-	} */
-
-	/* auto DeathInfo = (void*)(__int64(PlayerStateAthena) + MemberOffsets::FortPlayerStateAthena::DeathInfo);
-	FVector DeathLocation = MemberOffsets::DeathInfo::DeathLocation != -1 ? *(FVector*)(__int64(DeathInfo) + MemberOffsets::DeathInfo::DeathLocation) : FVector(0, 0, 0);
-
-	bIsRespawning = !(DeathLocation.CompareVectors(FVector(0, 0, 0))); // bro kms */
+	bool bIsRespawning = false; // reel
 
 	auto ASC = PlayerStateAthena->GetAbilitySystemComponent();
 	auto GameState = ((AFortGameModeAthena*)GameMode)->GetGameStateAthena();
@@ -168,60 +150,89 @@ APawn* AGameModeBase::SpawnDefaultPawnForHook(AGameModeBase* GameMode, AControll
 	{
 		auto WorldInventory = NewPlayerAsAthena->GetWorldInventory();
 
-		if (!WorldInventory)
-			return NewPawn;
-
-		if (!WorldInventory->GetPickaxeInstance())
+		if (WorldInventory->IsValidLowLevel())
 		{
-			// TODO Check Playlist->bRequirePickaxeInStartingInventory
-
-			auto& StartingItems = ((AFortGameModeAthena*)GameMode)->GetStartingItems();
-
-			NewPlayerAsAthena->AddPickaxeToInventory();
-
-			for (int i = 0; i < StartingItems.Num(); i++)
+			if (!WorldInventory->GetPickaxeInstance())
 			{
-				auto& StartingItem = StartingItems.at(i);
+				// TODO Check Playlist->bRequirePickaxeInStartingInventory
 
-				WorldInventory->AddItem(StartingItem.GetItem(), nullptr, StartingItem.GetCount());
-			}
+				auto& StartingItems = ((AFortGameModeAthena*)GameMode)->GetStartingItems();
 
-			/* if (Globals::bLateGame)
-			{
-				auto SpawnIslandTierGroup = UKismetStringLibrary::Conv_StringToName(L"Loot_AthenaFloorLoot_Warmup");
+				NewPlayerAsAthena->AddPickaxeToInventory();
 
-				for (int i = 0; i < 5; i++)
+				for (int i = 0; i < StartingItems.Num(); ++i)
 				{
-					auto LootDrops = PickLootDrops(SpawnIslandTierGroup);
+					auto& StartingItem = StartingItems.at(i);
 
-					for (auto& LootDrop : LootDrops)
-					{
-						WorldInventory->AddItem(LootDrop.ItemDefinition, nullptr, LootDrop.Count, LootDrop.LoadedAmmo);
-					}
+					WorldInventory->AddItem(StartingItem.GetItem(), nullptr, StartingItem.GetCount());
 				}
-			} */
 
-			auto AddInventoryOverrideTeamLoadouts = [&](AFortAthenaMutator* Mutator)
-			{
-				if (auto InventoryOverride = Cast<AFortAthenaMutator_InventoryOverride>(Mutator))
+				/* if (Globals::bLateGame)
 				{
-					auto TeamIndex = PlayerStateAthena->GetTeamIndex();
-					auto LoadoutTeam = InventoryOverride->GetLoadoutTeamForTeamIndex(TeamIndex);
+					auto SpawnIslandTierGroup = UKismetStringLibrary::Conv_StringToName(L"Loot_AthenaFloorLoot_Warmup");
 
-					if (LoadoutTeam.UpdateOverrideType == EAthenaInventorySpawnOverride::Always)
+					for (int i = 0; i < 5; ++i)
 					{
-						auto LoadoutContainer = InventoryOverride->GetLoadoutContainerForTeamIndex(TeamIndex);
+						auto LootDrops = PickLootDrops(SpawnIslandTierGroup);
 
-						for (int i = 0; i < LoadoutContainer.Loadout.Num(); i++)
+						for (auto& LootDrop : LootDrops)
 						{
-							auto& ItemAndCount = LoadoutContainer.Loadout.at(i);
-							WorldInventory->AddItem(ItemAndCount.GetItem(), nullptr, ItemAndCount.GetCount());
+							WorldInventory->AddItem(LootDrop.ItemDefinition, nullptr, LootDrop.Count, LootDrop.LoadedAmmo);
 						}
 					}
-				}
-			};
+				} */
 
-			LoopMutators(AddInventoryOverrideTeamLoadouts);
+				auto AddInventoryOverrideTeamLoadouts = [&](AFortAthenaMutator* Mutator)
+				{
+					if (auto InventoryOverride = Cast<AFortAthenaMutator_InventoryOverride>(Mutator))
+					{
+						auto TeamIndex = PlayerStateAthena->GetTeamIndex();
+						auto LoadoutTeam = InventoryOverride->GetLoadoutTeamForTeamIndex(TeamIndex);
+
+						if (LoadoutTeam.UpdateOverrideType == EAthenaInventorySpawnOverride::Always)
+						{
+							auto LoadoutContainer = InventoryOverride->GetLoadoutContainerForTeamIndex(TeamIndex);
+
+							for (int i = 0; i < LoadoutContainer.Loadout.Num(); ++i)
+							{
+								auto& ItemAndCount = LoadoutContainer.Loadout.at(i);
+								WorldInventory->AddItem(ItemAndCount.GetItem(), nullptr, ItemAndCount.GetCount());
+							}
+						}
+					}
+				};
+
+				LoopMutators(AddInventoryOverrideTeamLoadouts);
+			}
+
+			const auto& ItemInstances = WorldInventory->GetItemList().GetItemInstances();
+			const auto& ReplicatedEntries = WorldInventory->GetItemList().GetReplicatedEntries();
+
+			for (int i = 0; i < ItemInstances.Num(); ++i)
+			{
+				auto ItemInstance = ItemInstances.at(i);
+
+				if (!ItemInstance) continue;
+
+				auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(ItemInstance->GetItemEntry()->GetItemDefinition());
+
+				if (!WeaponItemDefinition) continue;
+
+				ItemInstance->GetItemEntry()->GetLoadedAmmo() = WeaponItemDefinition->GetClipSize();
+				WorldInventory->GetItemList().MarkItemDirty(ItemInstance->GetItemEntry());
+			}
+
+			for (int i = 0; i < ReplicatedEntries.Num(); ++i)
+			{
+				auto ReplicatedEntry = ReplicatedEntries.AtPtr(i, FFortItemEntry::GetStructSize());
+
+				auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(ReplicatedEntry->GetItemDefinition());
+
+				if (!WeaponItemDefinition) continue;
+
+				ReplicatedEntry->GetLoadedAmmo() = WeaponItemDefinition->GetClipSize();
+				WorldInventory->GetItemList().MarkItemDirty(ReplicatedEntry);
+			}
 
 			WorldInventory->Update();
 		}
@@ -249,23 +260,7 @@ APawn* AGameModeBase::SpawnDefaultPawnForHook(AGameModeBase* GameMode, AControll
 		// NewPlayerAsAthena->RespawnPlayerAfterDeath(true);
 	}
 
-	{
-		auto itr = Globals::OutfitMap.find(PlayerStateAthena->GetPlayerName().ToString());
-		auto playerName = PlayerStateAthena->GetPlayerName().ToString();
-		if (itr != Globals::OutfitMap.end()) {
-			auto cidDef = FindObject(itr->second, nullptr, ANY_PACKAGE);
-			if (cidDef) {
-				LOG_INFO(LogGame, "Setting {0}'s outfit to {1}", playerName, itr->second);
-				// MessageBoxA(0, cidDef->GetFullName().c_str(), "Outfit", 0);
-				ApplyCID((AFortPlayerPawn*)NewPawn, cidDef, true);
-				LOG_INFO(LogGame, "Set {0}'s outfit to {1}", playerName, itr->second);
-			} else {
-				LOG_INFO(LogGame, "Set {0}'s outfit to {1} but couldn't find it", playerName, itr->second);
-			}
-		} else {
-			LOG_INFO(LogGame, "Couldn't find {0}'s outfit", playerName);
-		}
-	}
+	// LOG_INFO(LogDev, "Finish SpawnDefaultPawnFor!");
 
 	return NewPawn;
 }
